@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>Setting up AMD Raedon VII for Deeplearning Workloads on Ubuntu Server 22.04.3 (Featuring Tinygrad with OpenCL GPU Backend)</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+        <meta name="description" content="Angel sucking at life, via stable diffusion via amd raedon vii its tricky to set up an AMD gpu for use with pytorch I remember a few years ago my..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">at home deeplearning - dev blog</a></h1>
+                <nav><ul>
+                    <li class="active"><a href="/category/misc.html">misc</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/setting-up-amd-raedon-vii-for-deeplearning-workloads-on-ubuntu-server-22043-featuring-tinygrad-with-opencl-gpu-backend.html" rel="bookmark"
+           title="Permalink to Setting up AMD Raedon VII for Deeplearning Workloads on Ubuntu Server 22.04.3 (Featuring Tinygrad with OpenCL GPU Backend)">Setting up AMD Raedon VII for Deeplearning Workloads on Ubuntu Server 22.04.3 (Featuring Tinygrad with OpenCL GPU Backend)</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2023-10-05T00:00:00-04:00">
+                Published: Thu 05 October 2023
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/big-c-note.html">big-c-note</a>
+        </address>
+<p>In <a href="/category/misc.html">misc</a>.</p>
+
+</footer><!-- /.post-info -->      <h2>Angel sucking at life, via stable diffusion via amd raedon vii</h2>
+<p><img alt="Angel sucking at life" src="/images/angel-sucking-at-life.png"></p>
+<h2>its tricky to set up an AMD gpu for use with pytorch</h2>
+<p>I remember a few years ago my co-collaborator on a <a href="https://github.com/fedden/poker_ai">poker ai project</a> told me DO NOT buy AMD gpus because the tooling was "bleeding edge". Me being the contrarian I am, thought "Ah, but I'll be better for figuring out how to get it to work!". Nope. It turns out my Raedon VII would just be used for the 12 inch monitor that I use for bios on my Ubuntu Server box.</p>
+<p>Fast forward to the last half of 2022. Now with an Nvidia GPU, I thought one weekend, "why don't I brush off that old Raedon VII and see if I can get it to work with pytorch"? And after nearly bricking my computer, the answer was still, Nope.</p>
+<p>Here we are in October of 2023. I've been watching the growing <a href="https://github.com/tinygrad/tinygrad">tinygrad project</a> since 2020. (Ironically, I had a small contribution in 2020 due to <a href="https://github.com/inducer/pyopencl/issues/404">some missing wheel</a> for <code>pyopencl</code>).</p>
+<h2>Tinygrad is dope</h2>
+<p>I love the idea behind Tinygrad. From <a href="https://github.com/tinygrad/tinygrad">their github</a>:</p>
+<blockquote>
+<p>This may not be the best deep learning framework, but it is a deep learning framework.</p>
+<p>Due to its extreme simplicity, it aims to be the easiest framework to add new accelerators to, with support for both inference and training. If XLA is CISC, tinygrad is RISC:ALEReset</p>
+</blockquote>
+<p>And here's a great <a href="https://www.youtube.com/watch?v=dNrTrx42DGQ&amp;t=2700s">video from the Lex and George Hotz interview</a> (highly recommend the interview)</p>
+<p>So, the main idea for Tinygrad is simplicity, and I love simplicity. Also, I can get behind the idea of making it easier for non-Nvidia gpus to be used for deeplearning.</p>
+<p>I decided to give AMD another go but using Tinygrad as the NN framework.</p>
+<h2>Setting up the AMD drivers with OpenCL</h2>
+<ul>
+<li><a href="https://www.amd.com/en/support/graphics/amd-radeon-2nd-generation-vega/amd-radeon-2nd-generation-vega/amd-radeon-vii">here</a> are the drivers for the Raedon VII for Ubuntu 22.04.3</li>
+<li><a href="https://www.amd.com/en/support">here</a> are the drivers for other AMD gpus for various OS/distributions.</li>
+<li><a href="https://amdgpu-install.readthedocs.io/en/latest/index.html">here</a> is the set up for the amd gpu drivers. I would highly recommend reading that for all the nuances relating to having had installed a amd drivers before, and other edge cases.</li>
+</ul>
+<p>In my case for ubuntu, you get a <code>.deb</code> file. You can get this installed a couple of ways, but I chose:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>dpkg<span class="w"> </span>-i<span class="w"> </span>amdgpu-install_5.7.50700-1_all.deb
+</code></pre></div>
+
+<p>Now, you have the <code>amdgpu-install</code> cli.</p>
+<div class="highlight"><pre><span></span><code>amdgpu-install<span class="w"> </span>-h
+</code></pre></div>
+
+<p>Now, tinygrad has an <a href="https://github.com/tinygrad/tinygrad#accelerators">OpenCL accelerator</a> and <code>amdgpu-install</code> has an <a href="https://amdgpu-install.readthedocs.io/en/latest/install-overview.html">OpenCL component</a>.</p>
+<p>Since all we require is opencl, we can just run</p>
+<div class="highlight"><pre><span></span><code>amdgpu-install<span class="w"> </span>--usecase<span class="o">=</span>opencl<span class="w"> </span>--opencl<span class="o">=</span>rocm
+</code></pre></div>
+
+<p>Now you will have to see if your AMD gpu is before or after vega 10. Since the Raedon VII is vega 20, I use rocm, but before vega 10, you use <code>--opencl=legacy</code>. See <a href="https://amdgpu-install.readthedocs.io/en/latest/index.html">here</a> for more details</p>
+<p>Now you should be able to run</p>
+<div class="highlight"><pre><span></span><code>clinfo
+</code></pre></div>
+
+<p>Now, you may see that the number of devices is 0. This is likely because you need to <a href="https://amdgpu-install.readthedocs.io/en/latest/install-installing.html#opencl-optional-component">change some permissions for OpenCL</a>. That should sort you! You may have to reboot if you get stuck.</p>
+<h2>Running tinygrad with the <code>GPU</code> (OpenCL) accelerator</h2>
+<p>Cool, so now just <a href="https://github.com/tinygrad/tinygrad#installation">install</a>.</p>
+<p>And voila!</p>
+<div class="highlight"><pre><span></span><code><span class="n">GPU</span><span class="o">=</span><span class="mi">1</span> <span class="n">python3</span> <span class="n">examples</span><span class="o">/</span><span class="n">stable_diffusion</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">prompt</span> <span class="s2">&quot;angel sucking at life&quot;</span>
+</code></pre></div>
+
+<p><img alt="Angel sucking at life" src="/images/angel-sucking-at-life.png"></p>
+<p>The <code>GPU</code> <a href="https://github.com/tinygrad/tinygrad/blob/master/docs/env_vars.md#global-variables">env var</a>, when set to one, will use any OpenCl device available.</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>links</h2>
+                        <ul>
+                            <li><a href="https://getpelican.com/">Pelican</a></li>
+                            <li><a href="https://www.python.org/">Python.org</a></li>
+                            <li><a href="https://palletsprojects.com/p/jinja/">Jinja2</a></li>
+                            <li><a href="#">You can modify those links in your config file</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="#">You can add links in your config file</a></li>
+                            <li><a href="#">Another social link</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
