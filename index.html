@@ -18,7 +18,7 @@
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="/setting-up-amd-raedon-vii-for-deeplearning-workloads-on-ubuntu-server-22043-featuring-tinygrad-with-opencl-gpu-backend.html">Setting up AMD Raedon VII for Deeplearning Workloads on Ubuntu Server 22.04.3 (Featuring Tinygrad with OpenCL GPU Backend)</a></h1>
+                    <h1 class="entry-title"><a href="/setting-up-amd-raedon-vii-for-deeplearning-workloads-on-ubuntu-server-22043-featuring-tinygrad-with-opencl-accelerator.html">Setting up AMD Raedon VII for Deeplearning Workloads on Ubuntu Server 22.04.3 (Featuring Tinygrad with OpenCL Accelerator)</a></h1>
 <footer class="post-info">
         <abbr class="published" title="2023-10-05T00:00:00-04:00">
                 Published: Thu 05 October 2023
@@ -60,7 +60,7 @@
 
 <p>Now, tinygrad has an <a href="https://github.com/tinygrad/tinygrad#accelerators">OpenCL accelerator</a> and <code>amdgpu-install</code> has an <a href="https://amdgpu-install.readthedocs.io/en/latest/install-overview.html">OpenCL component</a>.</p>
 <p>Since all we require is opencl, we can just run</p>
-<div class="highlight"><pre><span></span><code>amdgpu-install<span class="w"> </span>--usecase<span class="o">=</span>opencl<span class="w"> </span>--opencl<span class="o">=</span>rocm
+<div class="highlight"><pre><span></span><code>amdgpu-install<span class="w"> </span>--usecase<span class="o">=</span>opencl<span class="w"> </span>--opencl<span class="o">=</span>rocr
 </code></pre></div>
 
 <p>Now you will have to see if your AMD gpu is before or after vega 10. Since the Raedon VII is vega 20, I use rocm, but before vega 10, you use <code>--opencl=legacy</code>. See <a href="https://amdgpu-install.readthedocs.io/en/latest/index.html">here</a> for more details</p>
