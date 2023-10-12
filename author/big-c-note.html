@@ -18,7 +18,111 @@
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="/setting-up-amd-raedon-vii-for-deeplearning-workloads-on-ubuntu-server-22043-featuring-tinygrad-with-opencl-gpu-backend.html">Setting up AMD Raedon VII for Deeplearning Workloads on Ubuntu Server 22.04.3 (Featuring Tinygrad with OpenCL GPU Backend)</a></h1>
+                    <h1 class="entry-title"><a href="/exploring-low-rank-adaptation-with-tinygrad.html">Exploring Low Rank Adaptation with tinygrad</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2023-10-12T00:00:00-04:00">
+                Published: Thu 12 October 2023
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/big-c-note.html">big-c-note</a>
+        </address>
+<p>In <a href="/category/misc.html">misc</a>.</p>
+
+</footer><!-- /.post-info --><h2>Exploring Low Rank Adaptation with tinygrad</h2>
+<p>In this post, I'll highlight <a href="https://github.com/big-c-note/tinygrad/blob/feature/add-lora-example/examples/lora_mnist.py">my project</a> that implements <a href="https://arxiv.org/abs/2106.09685">Low Rank Adaptation (LoRA)</a> using the <a href="https://tinygrad.org/">tinygrad framework</a> on a pre-trained model. The process involves simulating a pre-trained model with one epoch on the <a href="https://en.wikipedia.org/wiki/MNIST_database">MNIST dataset</a>, freezing the model parameters, identifying the worst classified digit, applying LoRA, and fine-tuning the model on training data filtered for that particular digit [1, 2]. The result shows improved performance on the identified digit without altering the frozen parameters.</p>
+<p><img alt="LoRA Output Image" src="/images/lora1.png">
+<img alt="LoRA Output Image" src="/images/lora2.png">
+<strong>The LoRA parameters aren't technically considered "layers", just quicker to note it like that.</strong></p>
+<h2>Introduction to MNIST, tinygrad and LoRA</h2>
+<p>MNIST is a dataset consiting of images of digits 0-9. The images are often used to predict what integer it is a drawing of. It's known for being small withonly 50K examples.</p>
+<p>tinygrad is a minimal neural network framework known for its simplicity and ease of integration with new accelerators for both inference and training.</p>
+<p>LoRA is a method aimed at efficient fine-tuning of pre-trained models by reducing the number of parameters involved in fine-tuning, thus potentially speeding up the process and saving resources.</p>
+<p>There's a great image of LoRA on the <a href="https://arxiv.org/pdf/2106.09685.pdf">first page of the original paper</a>. </p>
+<h2>Benefits of tinygrad and LoRA</h2>
+<ol>
+<li><strong>Simplicity</strong>: tinygrad is simple, expressive, and pythonic which makes it easy to work with.</li>
+<li><strong>Ease of Setup</strong>: <a href="https://big-c-note.github.io/setting-up-amd-raedon-vii-for-deeplearning-workloads-on-ubuntu-server-22043-featuring-tinygrad-with-opencl-accelerator.html">tinygrad easy to set up with AMD GPUs</a>, making it accessible for a broader range of developers, and making more competition for Nvidia.</li>
+<li><strong>Efficiency</strong>: LoRA significantly reduces the number of parameters to be fine-tuned, making the process faster and less resource-intensive.</li>
+</ol>
+<h2>Implementing LoRA with tinygrad</h2>
+<p>The provided code snippet demonstrates the process:</p>
+<ol>
+<li><strong>Simulating a Pre-trained Model</strong>: The model is simulated with one epoch on the MNIST dataset.</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+  <span class="o">...</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Simulating a pre-trained model, with one epoch..&quot;</span><span class="p">)</span>
+  <span class="o">...</span>
+  <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">epochs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">train_data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">train_data</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">lossfn</span><span class="o">=</span><span class="n">lossfn</span><span class="p">,</span> <span class="n">BS</span><span class="o">=</span><span class="n">BS</span><span class="p">)</span>
+  <span class="o">...</span>
+</code></pre></div>
+
+<ol>
+<li><strong>Freezing Model Parameters</strong>: After simulation, the model parameters are frozen to preserve the pre-trained weights.</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">loraize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+  <span class="o">...</span>
+  <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">original_params</span><span class="p">:</span>
+    <span class="n">par</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+  <span class="o">...</span>
+</code></pre></div>
+
+<ol>
+<li>Identifying the Worst Classified Digit: The code identifies the digit 9 as the most poorly classified digit.</li>
+</ol>
+<div class="highlight"><pre><span></span><code>  <span class="o">...</span>
+  <span class="n">worst_class</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">mislabeled_counts</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">mislabeled_counts</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Worst class: </span><span class="si">{</span><span class="n">worst_class</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="o">...</span>
+</code></pre></div>
+
+<ol>
+<li>Applying LoRA: The model is loraized to prepare for fine-tuning.</li>
+</ol>
+<div class="highlight"><pre><span></span><code>  <span class="o">...</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Lora-izing the model..&quot;</span><span class="p">)</span>
+  <span class="n">lora_model</span> <span class="o">=</span> <span class="n">loraize</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+  <span class="nb">setattr</span><span class="p">(</span><span class="n">lora_model</span><span class="p">,</span> <span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">lora_forward</span><span class="p">(</span><span class="n">lora_model</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+  <span class="o">...</span>
+</code></pre></div>
+
+<ol>
+<li>Fine-tuning the Model: The model is fine-tuned on training data filtered for digit 9.</li>
+</ol>
+<div class="highlight"><pre><span></span><code>  <span class="o">...</span>
+  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fine-tuning the worst class, </span><span class="si">{</span><span class="n">worst_class</span><span class="si">}</span><span class="s2">..&quot;</span><span class="p">)</span>
+  <span class="o">...</span>
+  <span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span> <span class="o">=</span> <span class="n">filter_data_by_class</span><span class="p">(</span><span class="n">train_data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">train_data</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="n">worst_class</span><span class="p">)</span>
+  <span class="n">filtered_data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">Y_train</span><span class="p">)</span>
+  <span class="o">...</span>
+  <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">epochs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">train</span><span class="p">(</span><span class="n">lora_model</span><span class="p">,</span> <span class="n">filtered_data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">filtered_data</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">lossfn</span><span class="o">=</span><span class="n">lossfn</span><span class="p">,</span> <span class="n">BS</span><span class="o">=</span><span class="n">BS</span><span class="p">)</span>
+  <span class="o">...</span>
+</code></pre></div>
+
+<h2>Insights</h2>
+<p>It's observed that with a certain extent of fine-tuning, the model significantly improves in classifying the digit worst class. However, over fine-tuning could lead to the model performing worse on other digits. This balance is crucial for achieving an overall efficient fine-tuning.</p>
+<h2>References</h2>
+<ul>
+<li>Inspiration from [1] &amp; [2]</li>
+<li>[1] https://www.youtube.com/watch?v=PXWYUTMt-AU</li>
+<li>[2] https://colab.research.google.com/drive/13okPgkUeK8BrSMz5PXwQ_FXgUZgWxYLp</li>
+</ul>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="/setting-up-amd-raedon-vii-for-deeplearning-workloads-on-ubuntu-server-22043-featuring-tinygrad-with-opencl-accelerator.html" rel="bookmark"
+                           title="Permalink to Setting up AMD Raedon VII for Deeplearning Workloads on Ubuntu Server 22.04.3 (Featuring Tinygrad with OpenCL Accelerator)">Setting up AMD Raedon VII for Deeplearning Workloads on Ubuntu Server 22.04.3 (Featuring Tinygrad with OpenCL Accelerator)</a></h1>
+                </header>
+
+                <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2023-10-05T00:00:00-04:00">
                 Published: Thu 05 October 2023
@@ -29,55 +133,15 @@
         </address>
 <p>In <a href="/category/misc.html">misc</a>.</p>
 
-</footer><!-- /.post-info --><h2>Angel sucking at life, via stable diffusion via amd raedon vii</h2>
+</footer><!-- /.post-info -->                <h2>Angel sucking at life, via stable diffusion via amd raedon vii</h2>
 <p><img alt="Angel sucking at life" src="/images/angel-sucking-at-life.png"></p>
 <h2>its tricky to set up an AMD gpu for use with pytorch</h2>
-<p>I remember a few years ago my co-collaborator on a <a href="https://github.com/fedden/poker_ai">poker ai project</a> told me DO NOT buy AMD gpus because the tooling was "bleeding edge". Me being the contrarian I am, thought "Ah, but I'll be better for figuring out how to get it to work!". Nope. It turns out my Raedon VII would just be used for the 12 inch monitor that I use for bios on my Ubuntu Server box.</p>
-<p>Fast forward to the last half of 2022. Now with an Nvidia GPU, I thought one weekend, "why don't I brush off that old Raedon VII and see if I can get it to work with pytorch"? And after nearly bricking my computer, the answer was still, Nope.</p>
-<p>Here we are in October of 2023. I've been watching the growing <a href="https://github.com/tinygrad/tinygrad">tinygrad project</a> since 2020. (Ironically, I had a small contribution in 2020 due to <a href="https://github.com/inducer/pyopencl/issues/404">some missing wheel</a> for <code>pyopencl</code>).</p>
-<h2>Tinygrad is dope</h2>
-<p>I love the idea behind Tinygrad. From <a href="https://github.com/tinygrad/tinygrad">their github</a>:</p>
-<blockquote>
-<p>This may not be the best deep learning framework, but it is a deep learning framework.</p>
-<p>Due to its extreme simplicity, it aims to be the easiest framework to add new accelerators to, with support for both inference and training. If XLA is CISC, tinygrad is RISC:ALEReset</p>
-</blockquote>
-<p>And here's a great <a href="https://www.youtube.com/watch?v=dNrTrx42DGQ&amp;t=2700s">video from the Lex and George Hotz interview</a> (highly recommend the interview)</p>
-<p>So, the main idea for Tinygrad is simplicity, and I love simplicity. Also, I can get behind the idea of making it easier for non-Nvidia gpus to be used for deeplearning.</p>
-<p>I decided to give AMD another go but using Tinygrad as the NN framework.</p>
-<h2>Setting up the AMD drivers with OpenCL</h2>
-<ul>
-<li><a href="https://www.amd.com/en/support/graphics/amd-radeon-2nd-generation-vega/amd-radeon-2nd-generation-vega/amd-radeon-vii">here</a> are the drivers for the Raedon VII for Ubuntu 22.04.3</li>
-<li><a href="https://www.amd.com/en/support">here</a> are the drivers for other AMD gpus for various OS/distributions.</li>
-<li><a href="https://amdgpu-install.readthedocs.io/en/latest/index.html">here</a> is the set up for the amd gpu drivers. I would highly recommend reading that for all the nuances relating to having had installed a amd drivers before, and other edge cases.</li>
-</ul>
-<p>In my case for ubuntu, you get a <code>.deb</code> file. You can get this installed a couple of ways, but I chose:</p>
-<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>dpkg<span class="w"> </span>-i<span class="w"> </span>amdgpu-install_5.7.50700-1_all.deb
-</code></pre></div>
-
-<p>Now, you have the <code>amdgpu-install</code> cli.</p>
-<div class="highlight"><pre><span></span><code>amdgpu-install<span class="w"> </span>-h
-</code></pre></div>
-
-<p>Now, tinygrad has an <a href="https://github.com/tinygrad/tinygrad#accelerators">OpenCL accelerator</a> and <code>amdgpu-install</code> has an <a href="https://amdgpu-install.readthedocs.io/en/latest/install-overview.html">OpenCL component</a>.</p>
-<p>Since all we require is opencl, we can just run</p>
-<div class="highlight"><pre><span></span><code>amdgpu-install<span class="w"> </span>--usecase<span class="o">=</span>opencl<span class="w"> </span>--opencl<span class="o">=</span>rocm
-</code></pre></div>
-
-<p>Now you will have to see if your AMD gpu is before or after vega 10. Since the Raedon VII is vega 20, I use rocm, but before vega 10, you use <code>--opencl=legacy</code>. See <a href="https://amdgpu-install.readthedocs.io/en/latest/index.html">here</a> for more details</p>
-<p>Now you should be able to run</p>
-<div class="highlight"><pre><span></span><code>clinfo
-</code></pre></div>
-
-<p>Now, you may see that the number of devices is 0. This is likely because you need to <a href="https://amdgpu-install.readthedocs.io/en/latest/install-installing.html#opencl-optional-component">change some permissions for OpenCL</a>. That should sort you! You may have to reboot if you get stuck.</p>
-<h2>Running tinygrad with the <code>GPU</code> (OpenCL) accelerator</h2>
-<p>Cool, so now just <a href="https://github.com/tinygrad/tinygrad#installation">install</a>.</p>
-<p>And voila!</p>
-<div class="highlight"><pre><span></span><code><span class="n">GPU</span><span class="o">=</span><span class="mi">1</span> <span class="n">python3</span> <span class="n">examples</span><span class="o">/</span><span class="n">stable_diffusion</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">prompt</span> <span class="s2">&quot;angel sucking at life&quot;</span>
-</code></pre></div>
-
-<p><img alt="Angel sucking at life" src="/images/angel-sucking-at-life.png"></p>
-<p>The <code>GPU</code> <a href="https://github.com/tinygrad/tinygrad/blob/master/docs/env_vars.md#global-variables">env var</a>, when set to one, will use any OpenCl device available.</p>                </article>
-            </aside><!-- /#featured -->
+<p>I remember a few years ago my co-collaborator on a <a href="https://github.com/fedden/poker_ai">poker ai project</a> told me DO NOT buy AMD gpus because the tooling was "bleeding edge". Me …</p>
+                <a class="readmore" href="/setting-up-amd-raedon-vii-for-deeplearning-workloads-on-ubuntu-server-22043-featuring-tinygrad-with-opencl-accelerator.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
         <section id="extras" class="body">
                 <div class="blogroll">
                         <h2>links</h2>

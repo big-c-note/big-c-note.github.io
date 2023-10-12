@@ -4,21 +4,27 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="generator" content="Pelican" />
-        <title>at home deeplearning - dev blog</title>
+        <title>Exploring Low Rank Adaptation with tinygrad</title>
         <link rel="stylesheet" href="/theme/css/main.css" />
+        <meta name="description" content="Exploring Low Rank Adaptation with tinygrad In this post, I'll highlight my project that implements Low Rank Adaptation (LoRA) using the tinygrad..." />
 </head>
 
 <body id="index" class="home">
         <header id="banner" class="body">
                 <h1><a href="/">at home deeplearning - dev blog</a></h1>
                 <nav><ul>
-                    <li><a href="/category/misc.html">misc</a></li>
+                    <li class="active"><a href="/category/misc.html">misc</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/exploring-low-rank-adaptation-with-tinygrad.html" rel="bookmark"
+           title="Permalink to Exploring Low Rank Adaptation with tinygrad">Exploring Low Rank Adaptation with tinygrad</a></h1>
+    </header>
 
-            <aside id="featured" class="body">
-                <article>
-                    <h1 class="entry-title"><a href="/exploring-low-rank-adaptation-with-tinygrad.html">Exploring Low Rank Adaptation with tinygrad</a></h1>
+    <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2023-10-12T00:00:00-04:00">
                 Published: Thu 12 October 2023
@@ -29,7 +35,7 @@
         </address>
 <p>In <a href="/category/misc.html">misc</a>.</p>
 
-</footer><!-- /.post-info --><h2>Exploring Low Rank Adaptation with tinygrad</h2>
+</footer><!-- /.post-info -->      <h2>Exploring Low Rank Adaptation with tinygrad</h2>
 <p>In this post, I'll highlight <a href="https://github.com/big-c-note/tinygrad/blob/feature/add-lora-example/examples/lora_mnist.py">my project</a> that implements <a href="https://arxiv.org/abs/2106.09685">Low Rank Adaptation (LoRA)</a> using the <a href="https://tinygrad.org/">tinygrad framework</a> on a pre-trained model. The process involves simulating a pre-trained model with one epoch on the <a href="https://en.wikipedia.org/wiki/MNIST_database">MNIST dataset</a>, freezing the model parameters, identifying the worst classified digit, applying LoRA, and fine-tuning the model on training data filtered for that particular digit [1, 2]. The result shows improved performance on the identified digit without altering the frozen parameters.</p>
 <p><img alt="LoRA Output Image" src="/images/lora1.png">
 <img alt="LoRA Output Image" src="/images/lora2.png">
@@ -109,39 +115,11 @@
 <li>Inspiration from [1] &amp; [2]</li>
 <li>[1] https://www.youtube.com/watch?v=PXWYUTMt-AU</li>
 <li>[2] https://colab.research.google.com/drive/13okPgkUeK8BrSMz5PXwQ_FXgUZgWxYLp</li>
-</ul>                </article>
-            </aside><!-- /#featured -->
-                <section id="content" class="body">
-                    <h1>Other articles</h1>
-                    <hr />
-                    <ol id="posts-list" class="hfeed">
+</ul>
+    </div><!-- /.entry-content -->
 
-            <li><article class="hentry">
-                <header>
-                    <h1><a href="/setting-up-amd-raedon-vii-for-deeplearning-workloads-on-ubuntu-server-22043-featuring-tinygrad-with-opencl-accelerator.html" rel="bookmark"
-                           title="Permalink to Setting up AMD Raedon VII for Deeplearning Workloads on Ubuntu Server 22.04.3 (Featuring Tinygrad with OpenCL Accelerator)">Setting up AMD Raedon VII for Deeplearning Workloads on Ubuntu Server 22.04.3 (Featuring Tinygrad with OpenCL Accelerator)</a></h1>
-                </header>
-
-                <div class="entry-content">
-<footer class="post-info">
-        <abbr class="published" title="2023-10-05T00:00:00-04:00">
-                Published: Thu 05 October 2023
-        </abbr>
-
-        <address class="vcard author">
-                By                         <a class="url fn" href="/author/big-c-note.html">big-c-note</a>
-        </address>
-<p>In <a href="/category/misc.html">misc</a>.</p>
-
-</footer><!-- /.post-info -->                <h2>Angel sucking at life, via stable diffusion via amd raedon vii</h2>
-<p><img alt="Angel sucking at life" src="/images/angel-sucking-at-life.png"></p>
-<h2>its tricky to set up an AMD gpu for use with pytorch</h2>
-<p>I remember a few years ago my co-collaborator on a <a href="https://github.com/fedden/poker_ai">poker ai project</a> told me DO NOT buy AMD gpus because the tooling was "bleeding edge". Me …</p>
-                <a class="readmore" href="/setting-up-amd-raedon-vii-for-deeplearning-workloads-on-ubuntu-server-22043-featuring-tinygrad-with-opencl-accelerator.html">read more</a>
-                </div><!-- /.entry-content -->
-            </article></li>
-                </ol><!-- /#posts-list -->
-                </section><!-- /#content -->
+  </article>
+</section>
         <section id="extras" class="body">
                 <div class="blogroll">
                         <h2>links</h2>
